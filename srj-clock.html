@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Journey Tracker V1</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+body {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  background: #0b0f14;
+  color: white;
+  display: flex;
+  justify-content: center;
+}
+
+.container {
+  width: 100%;
+  max-width: 1050px;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+/* TOAST NOTIFICATIONS */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #111;
+  color: white;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  opacity: 0;
+  pointer-events: none;
+  transition: 0.3s ease;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  z-index: 9999;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-6px);
+}
+
+/* HEADER */
+h1 {
+  font-size: 34px;
+  margin-bottom: 6px;
+}
+
+.sub {
+  opacity: 0.7;
+  margin-bottom: 20px;
+}
+
+/* COUNTDOWN 🍂 */
+.countdown {
+  font-size: 18px;
+  margin-bottom: 18px;
+  opacity: 0.9;
+}
+
+/* FLAGS */
+.flags {
+  display: flex;
+  justify-content: space-between;
+  font-size: 22px;
+  margin: 10px 0 20px;
+}
+
+/* PROGRESS BAR */
+.bar {
+  position: relative;
+  height: 10px;
+  background: #1b2430;
+  border-radius: 20px;
+  margin: 25px 0 40px;
+  overflow: hidden;
+}
+
+/* glow fill */
+.glow {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg,#4facfe,#00f2fe);
+  box-shadow: 0 0 14px rgba(0,242,254,0.5);
+  transition: width 0.4s ease;
+}
+
+/* moving dot */
+.dot {
+  position: absolute;
+  top: 50%;
+  left: 0%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 14px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(255,255,255,0.8);
+  transition: left 0.4s ease;
+}
+
+/* pulse dot */
+.dot::after {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: white;
+  opacity: 0.4;
+  animation: pulse 1.6s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 0.5; }
+  70% { transform: scale(2.5); opacity: 0; }
+  100% { opacity: 0; }
+}
+
+/* TIMELINE */
+.timeline {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  position: relative;
+}
+
+/* STEP */
+.step {
+  flex: 1;
+  position: relative;
+  cursor: pointer;
+  text-align: center;
+}
+
+/* icon only visible */
+.icon {
+  font-size: 26px;
+  transition: 0.3s;
+}
+
+/* label hidden until hover */
+.label {
+  font-size: 12px;
+  margin-top: 6px;
+  opacity: 0;
+  transition: 0.2s;
+}
+
+.step:hover .label {
+  opacity: 1;
+}
+
+/* story popup */
+.story {
+  position: absolute;
+  top: 55px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #111;
+  padding: 8px 10px;
+  border-radius: 10px;
+  width: 180px;
+  font-size: 12px;
+  opacity: 0;
+  pointer-events: none;
+  transition: 0.2s;
+}
+
+.step.open .story {
+  opacity: 1;
+}
+
+/* STATES */
+.past { opacity: 0.35; }
+.future { opacity: 0.7; }
+
+.active .icon {
+  animation: iconPulse 1.5s infinite;
+}
+
+@keyframes iconPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+
+/* FLIGHT EMBED */
+.embed {
+  margin-top: 30px;
+  background: #111;
+  border-radius: 12px;
+  height: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.9;
+  font-size: 14px;
+}
+
+/* MOBILE RESPONSIVENESS */
+@media (max-width: 768px) {
+
+  .container {
+    padding: 20px 10px;
+  }
+
+  h1 {
+    font-size: 24px;
+  }
+
+  /* timeline scroll instead of squeezing */
+  .timeline {
+    overflow-x: auto;
+    gap: 20px;
+    padding-bottom: 10px;
+  }
+
+  .step {
+    min-width: 60px;
+  }
+
+  /* make countdown tighter */
+  .countdown {
+    font-size: 14px;
+  }
+
+  /* embed resize */
+  .embed {
+    height: 200px;
+  }
+}
+
+/* LANDSCAPE PROMPT */
+.rotate-hint {
+  display: none;
+  font-size: 12px;
+  opacity: 0.6;
+  margin-top: 10px;
+}
+
+@media (max-width: 768px) and (orientation: portrait) {
+  .rotate-hint {
+    display: block;
+  }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <h1>Moyo 🍂 Mrembo</h1>
+  <div class="sub">SRJ Count Down and Flight Tracker</div>
+
+  <!-- COUNTDOWN -->
+  <div class="countdown" id="countdown">Loading countdown...</div>
+  <div class="rotate-hint">
+    📱 Rotate your phone for a better experience
+  </div>
+
+  <!-- FLAGS -->
+  <div class="flags">
+    <div>🇬🇧</div>
+    <div>🇰🇪</div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="bar">
+    <div class="glow" id="glow"></div>
+    <div class="dot" id="dot"></div>
+  </div>
+
+  <!-- TIMELINE -->
+  <div class="timeline" id="timeline"></div>
+
+  <!-- FLIGHT EMBED (placeholder) -->
+  <div class="embed" id="flightEmbed">
+    Loading flight radar...
+  </div>
+
+</div>
+
+<script>
+
+/* ICON MAP */
+const iconMap = {
+  waiting: "🍂",
+  boarding: "🧳",
+  takeoff: "✈️",
+  landing: "🛬",
+  meet: "❤️"
+};
+
+/* JOURNEY (CONNECTING FLIGHT STRUCTURE) */
+const steps = [
+  { label:"Waiting UK", type:"waiting", time:"2026-05-11T06:00:00", story:"Pre-departure waiting phase 🍂" },
+  { label:"Boarding", type:"boarding", time:"2026-05-11T09:00:00", story:"Boarding begins 🧳" },
+  { label:"Takeoff 1", type:"takeoff", time:"2026-05-11T10:00:00", story:"First flight has departed ✈️" },
+  { label:"Landing Transit", type:"landing", time:"2026-05-11T16:00:00", story:"Transit landing 🛬" },
+  { label:"Transit Wait", type:"waiting", time:"2026-05-11T15:00:00", story:"Waiting for connection 🍂" },
+  { label:"Takeoff 2", type:"takeoff", time:"2026-05-11T18:40:00", story:"Final flight to Kenya ✈️" },
+  { label:"Landing Kenya", type:"landing", time:"2026-05-12T01:25:00", story:"Arrived in Kenya 🇰🇪" },
+  { label:"Meeting", type:"meet", time:"2026-05-12T06:00:00", story:"Finally together ❤️" }
+].map(s => ({ ...s, ts: new Date(s.time).getTime() }));
+
+/* RENDER TIMELINE */
+const timeline = document.getElementById("timeline");
+
+steps.forEach((s,i)=>{
+  const el = document.createElement("div");
+  el.className = "step";
+
+  el.innerHTML = `
+    <div class="icon">${iconMap[s.type]}</div>
+    <div class="label">${s.label}</div>
+    <div class="story">${s.story}</div>
+  `;
+
+  el.onclick = () => {
+    document.querySelectorAll(".step").forEach(x=>x.classList.remove("open"));
+    el.classList.toggle("open");
+  };
+
+  timeline.appendChild(el);
+});
+
+/* CURRENT STEP */
+function getCurrent(now){
+  return steps.find((s,i)=>{
+    const next = steps[i+1];
+    return now >= s.ts && (!next || now < next.ts);
+  });
+}
+
+/* COUNTDOWN */
+function updateCountdown(){
+  const diff = steps[0].ts - Date.now();
+
+  const d = Math.floor(diff/86400000);
+  const h = Math.floor(diff/3600000)%24;
+  const m = Math.floor(diff/60000)%60;
+  const s = Math.floor(diff/1000)%60;
+
+  document.getElementById("countdown").innerText =
+    diff > 0
+      ? `🍂 Starts in ${d}d ${h}h ${m}m ${s}s`
+      : `Journey in progress`;
+}
+
+/* MAIN UPDATE LOOP */
+function update(){
+  const now = Date.now();
+  const current = getCurrent(now);
+
+  updateCountdown();
+
+  /* progress calc */
+  const start = steps[0].ts;
+  const end = steps[steps.length - 1].ts;
+
+  let percent =
+    now < start ? 0 :
+    now > end ? 100 :
+    ((now - start) / (end - start)) * 100;
+
+  document.getElementById("glow").style.width = percent + "%";
+  document.getElementById("dot").style.left = percent + "%";
+
+  /* states */
+  document.querySelectorAll(".step").forEach((el,i)=>{
+    el.classList.remove("past","active","future");
+
+    if(now > steps[i].ts) el.classList.add("past");
+    else if(steps[i] === current) el.classList.add("active");
+    else el.classList.add("future");
+  });
+}
+
+setInterval(update,1000);
+update();
+
+/* detect step change */
+const now = Date.now();
+
+const currentIndex = steps.findIndex((s,i)=>{
+  const next = steps[i+1];
+  return now >= s.ts && (!next || now < next.ts);
+});
+
+if(currentIndex !== lastStepIndex && currentIndex !== -1){
+  lastStepIndex = currentIndex;
+
+  const step = steps[currentIndex];
+  showToast(`Status Update: ${step.label} ✈️`);
+}
+
+  let lastStepIndex = -1;
+  function showToast(msg){
+  const toast = document.getElementById("toast");
+  toast.innerText = msg;
+  toast.classList.add("show");
+
+  clearTimeout(window.toastTimer);
+  window.toastTimer = setTimeout(()=>{
+    toast.classList.remove("show");
+  }, 3500);
+}
+
+const FLIGHT_ID = "TK1968, TK0607"; 
+// example later: "KQ101", "BA78", etc.
+
+function loadFlightRadar(){
+  const embed = document.getElementById("flightEmbed");
+
+  // Flightradar24 iframe pattern (public embed style)
+  embed.innerHTML = `
+    <iframe
+      src="https://www.flightradar24.com/simple_index.php?icao=${FLIGHT_ID}"
+      width="100%"
+      height="260"
+      style="border:0; border-radius:12px;"
+    ></iframe>
+  `;
+}
+
+loadFlightRadar();
+
+</script>
+
+<script>
+  function checkOrientation(){
+  if (window.innerHeight > window.innerWidth) {
+    console.log("Portrait mode");
+  } else {
+    console.log("Landscape mode");
+  }
+}
+
+  window.addEventListener("resize", checkOrientation);
+  checkOrientation();
+</script>
+
+<div class="toast" id="toast"></div>
+
+</body>
+</html>
