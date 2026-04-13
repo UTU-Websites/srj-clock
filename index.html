@@ -130,6 +130,7 @@ h1 {
   justify-content: space-between;
   gap: 10px;
   position: relative;
+  margin: 0 0 0 4rem;
 }
 
 /* STEP */
@@ -194,7 +195,7 @@ h1 {
 
 /* FLIGHT EMBED */
 .embed {
-  margin-top: 30px;
+  margin-top: 3rem;
   background: #111;
   border-radius: 12px;
   height: 260px;
@@ -253,6 +254,7 @@ h1 {
 }
 
 </style>
+
 </head>
 
 <body>
@@ -280,14 +282,18 @@ h1 {
     <div class="dot" id="dot"></div>
   </div>
 
-  <!-- TIMELINE -->
-  <div class="timeline" id="timeline"></div>
-
-  <!-- FLIGHT EMBED (placeholder) -->
-  <div class="embed" id="flightEmbed">
-    Loading flight radar...
+  <div>
+    <!-- TIMELINE -->
+    <div class="timeline" id="timeline"></div>
   </div>
-
+  
+  <div>
+    <!-- FLIGHT EMBED (placeholder) -->
+    <div class="embed" id="flightEmbed">
+      Loading flight radar...
+    </div>
+  </div>
+  
 </div>
 
 <script>
@@ -303,9 +309,9 @@ const iconMap = {
 
 /* JOURNEY (CONNECTING FLIGHT STRUCTURE) */
 const steps = [
-  { label:"Waiting UK", type:"waiting", time:"2026-05-11T06:00:00", story:"Pre-departure waiting phase 🍂" },
+  { label:"Waiting UK", type:"waiting", time:"2026-05-11T06:00:00", story:"Pre-departure<br>waiting phase 🍂" },
   { label:"Boarding", type:"boarding", time:"2026-05-11T09:00:00", story:"Boarding begins 🧳" },
-  { label:"Takeoff 1", type:"takeoff", time:"2026-05-11T10:00:00", story:"First flight has departed ✈️" },
+  { label:"Takeoff 1", type:"takeoff", time:"2026-05-11T10:00:00", story:"First flight<br>has departed ✈️" },
   { label:"Landing Transit", type:"landing", time:"2026-05-11T16:00:00", story:"Transit landing 🛬" },
   { label:"Transit Wait", type:"waiting", time:"2026-05-11T15:00:00", story:"Waiting for connection 🍂" },
   { label:"Takeoff 2", type:"takeoff", time:"2026-05-11T18:40:00", story:"Final flight to Kenya ✈️" },
@@ -417,7 +423,7 @@ if(currentIndex !== lastStepIndex && currentIndex !== -1){
 }
 
 const FLIGHT_ID = "TK1968, TK0607"; 
-// example later: "KQ101", "BA78", etc.
+// flight ID
 
 function loadFlightRadar(){
   const embed = document.getElementById("flightEmbed");
