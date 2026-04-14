@@ -92,7 +92,7 @@ h1 {
   font-optical-sizing: auto;
   font-weight: 500;
   font-style: normal;
-  font-size: 34px;
+  font-size: 4em;
   margin-bottom: 6px;
 }
 
@@ -103,7 +103,7 @@ h1 {
 
 /* COUNTDOWN 🍂 */
 .countdown {
-  font-size: 18px;
+  font-size: 2em;
   margin-bottom: 18px;
   opacity: 0.9;
 }
