@@ -237,13 +237,48 @@ function update(){
 
 setInterval(update,1000);
 
-/* INITIAL LOAD */
-const initialIndex = getCurrentIndex(Date.now());
-if(initialIndex !== -1){
-  switchBackground(steps[initialIndex]);
+/* ================= SAFE GET INDEX ================= */
+function getSafeIndex(){
+  const now = Date.now();
+  let index = getCurrentIndex(now);
+
+  if(index === -1){
+    if(now < steps[0].ts){
+      index = 0; // before journey → first step
+    } else {
+      index = steps.length - 1; // after journey → last step
+    }
+  }
+
+  return index;
 }
 
+/* ================= INITIAL STATE ================= */
+function initScene(){
+  const index = getSafeIndex();
+  const step = steps[index];
+
+  switchBackground(step);
+
+  document.querySelectorAll(".step").forEach((el,i)=>{
+    el.classList.remove("past","active","future");
+
+    if(i < index) el.classList.add("past");
+    else if(i === index) el.classList.add("active");
+    else el.classList.add("future");
+  });
+
+  lastStepIndex = index; // important: sync state
+}
+
+/* ================= PRELOAD ================= */
+const preload = new Image();
+preload.src = steps[getSafeIndex()].bg;
+
+/* RUN */
+initScene();
 update();
+
 
 /* ================= FLIGHT EMBED ================= */
 const FLIGHT_ID = "TK1968";
