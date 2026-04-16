@@ -79,9 +79,22 @@ const steps = [
 
 /* ================= DOM ================= */
 const timeline = document.getElementById("timeline");
-const bg = document.getElementById("bg");
-const bgVideo = document.getElementById("bgVideo");
 const storyEl = document.getElementById("storyOverlay");
+
+/* DOUBLE LAYER SYSTEM */
+const layers = [
+  {
+    img: document.getElementById("bg1"),
+    vid: document.getElementById("bgVideo1")
+  },
+  {
+    img: document.getElementById("bg2"),
+    vid: document.getElementById("bgVideo2")
+  }
+];
+
+let activeLayer = 0;
+let lastStepIndex = -1;
 
 /* ================= RENDER TIMELINE ================= */
 steps.forEach((s,i)=>{
@@ -96,55 +109,62 @@ steps.forEach((s,i)=>{
 
   el.onclick = () => {
     document.querySelectorAll(".step").forEach(x=>x.classList.remove("open"));
-    el.classList.toggle("open");
+    el.classList.add("open");
+    switchBackground(s);
   };
 
   timeline.appendChild(el);
 });
 
-/* ================= STATE ================= */
-let lastStepIndex = -1;
-
-/* ================= CURRENT STEP ================= */
-function getCurrent(now){
-  return steps.find((s,i)=>{
+/* ================= GET CURRENT ================= */
+function getCurrentIndex(now){
+  return steps.findIndex((s,i)=>{
     const next = steps[i+1];
     return now >= s.ts && (!next || now < next.ts);
   });
 }
 
-/* ================= BACKGROUND SYSTEM ================= */
-function updateCinematic(current){
+/* ================= SWITCH BACKGROUND (NO FLICKER) ================= */
+function switchBackground(step){
 
-  if(!current) return;
+  const nextLayer = (activeLayer + 1) % 2;
+  const currentLayer = layers[activeLayer];
+  const next = layers[nextLayer];
 
-  // reset
-  bg.style.opacity = 0;
-  bgVideo.style.opacity = 0;
+  // reset next layer
+  next.img.style.opacity = 0;
+  next.vid.style.opacity = 0;
 
+  if(step.bgType === "video"){
+    next.vid.src = step.bg;
+    next.vid.style.display = "block";
+    next.vid.load();
+    next.vid.play().catch(()=>{});
+
+    next.img.style.backgroundImage = "none";
+  } else {
+    next.img.style.backgroundImage = `url('${step.bg}')`;
+    next.img.style.display = "block";
+
+    next.vid.pause();
+    next.vid.style.display = "none";
+  }
+
+  // crossfade
   setTimeout(()=>{
+    next.img.style.opacity = 1;
+    next.vid.style.opacity = 1;
 
-    if(current.bgType === "video"){
-      bgVideo.src = current.bg;
-      bgVideo.style.display = "block";
-      bgVideo.style.opacity = 1;
+    currentLayer.img.style.opacity = 0;
+    currentLayer.vid.style.opacity = 0;
 
-      bg.style.backgroundImage = "none";
-    } else {
-      bg.style.backgroundImage = `url('${current.bg}')`;
-      bg.style.opacity = 1;
+    activeLayer = nextLayer;
+  }, 50);
 
-      bgVideo.pause();
-      bgVideo.style.display = "none";
-    }
-
-  }, 300);
-
-  // STORY TEXT
+  // story
   storyEl.classList.remove("show");
-
   setTimeout(()=>{
-    storyEl.innerHTML = current.story;
+    storyEl.innerHTML = step.story;
     storyEl.classList.add("show");
   }, 400);
 }
@@ -173,16 +193,25 @@ function showToast(msg){
   clearTimeout(window.toastTimer);
   window.toastTimer = setTimeout(()=>{
     toast.classList.remove("show");
-  }, 3500);
+  }, 3000);
 }
 
 /* ================= MAIN LOOP ================= */
 function update(){
   const now = Date.now();
-  const current = getCurrent(now);
 
-  updateCinematic(current);
   updateCountdown();
+
+  const index = getCurrentIndex(now);
+
+  if(index !== lastStepIndex && index !== -1){
+    lastStepIndex = index;
+
+    const step = steps[index];
+
+    switchBackground(step);
+    showToast(`Status Update: ${step.label} ✈️`);
+  }
 
   /* progress */
   const start = steps[0].ts;
@@ -201,23 +230,19 @@ function update(){
     el.classList.remove("past","active","future");
 
     if(now > steps[i].ts) el.classList.add("past");
-    else if(steps[i] === current) el.classList.add("active");
+    else if(i === index) el.classList.add("active");
     else el.classList.add("future");
   });
-
-  /* STEP CHANGE */
-  const currentIndex = steps.findIndex((s,i)=>{
-    const next = steps[i+1];
-    return now >= s.ts && (!next || now < next.ts);
-  });
-
-  if(currentIndex !== lastStepIndex && currentIndex !== -1){
-    lastStepIndex = currentIndex;
-    showToast(`Status Update: ${steps[currentIndex].label} ✈️`);
-  }
 }
 
 setInterval(update,1000);
+
+/* INITIAL LOAD */
+const initialIndex = getCurrentIndex(Date.now());
+if(initialIndex !== -1){
+  switchBackground(steps[initialIndex]);
+}
+
 update();
 
 /* ================= FLIGHT EMBED ================= */
@@ -237,15 +262,3 @@ function loadFlightRadar(){
 }
 
 loadFlightRadar();
-
-/* ================= ORIENTATION ================= */
-function checkOrientation(){
-  if (window.innerHeight > window.innerWidth) {
-    console.log("Portrait");
-  } else {
-    console.log("Landscape");
-  }
-}
-
-window.addEventListener("resize", checkOrientation);
-checkOrientation();
